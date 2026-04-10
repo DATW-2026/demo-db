@@ -23,3 +23,16 @@ SELECT ci.name as city, ci.population as population, st.name as state
 
 SELECT *
 FROM cities WHERE name = 'madrid';
+
+----------------------------------------------
+
+SELECT
+		re.name,
+		COUNT(*) AS número,
+		TO_CHAR(SUM(co.population), '999G999G999') AS "Población Total",
+		TO_CHAR(AVG(co.population), '999G999G999') AS "Población Media"
+	FROM countries AS co
+	JOIN regions AS re
+		ON co.region_id = re.id
+	GROUP BY re.name
+	HAVING COUNT(*) > 1;
