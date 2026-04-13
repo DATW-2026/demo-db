@@ -72,7 +72,7 @@ Probamos algunas selecciones en las que se utilice la unión de dos tablas (sele
 - Nombre de la ciudad, país y su extensión web de las ciudades de más de 1.000.000 de habitantes de Asia y África
 
 ```sql
-SELECT ci.name AS ciudad, co.name AS país, re.name as continente, TO_CHAR(ci.population, '999G999G999G999') as posblación, co.tld AS extensión
+SELECT ci.name AS ciudad, co.name AS país, re.name as continente, TO_CHAR(ci.population, '999G999G999G999') as población, co.tld AS extensión
 FROM cities ci
 JOIN countries co ON ci.country_id = co.id
 JOIN regions re ON co.region_id = re.id
