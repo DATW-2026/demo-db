@@ -36,3 +36,38 @@ SELECT
 		ON co.region_id = re.id
 	GROUP BY re.name
 	HAVING COUNT(*) > 1;
+
+----------------------------------------------
+
+-- SUBCONSULTAS
+
+SELECT ci.name AS ciudad, st.name AS provincia, ci.population
+    FROM cities AS ci
+    JOIN states st
+        ON ci.state_id = st.id
+    WHERE ci.country_id = (SELECT * FROM countries WHERE name = 'Spain')
+        AND ci.type != 'section'
+        AND ci.population > 100000
+    LIMIT 20;
+
+----------------------------------------------
+
+-- VISTAS
+
+DROP VIEW IF EXISTS country_cities;
+
+CREATE VIEW country_cities AS
+    SELECT ci.name AS ciudad, st.name AS provincia, ci.population AS población, 
+           co.name AS país, ci.type AS tipo
+        FROM cities AS ci
+        JOIN states st
+            ON ci.state_id = st.id
+        JOIN countries co
+            ON ci.country_id = co.id;
+
+SELECT *
+    FROM country_cities
+    WHERE país = 'Spain'
+        AND tipo != 'section'
+        AND población > 100000
+    LIMIT 20;
