@@ -6,4 +6,6 @@ import { connectDB } from './config/db.ts';
 const log = debug(`${env.PROJECT_NAME}:index`);
 log('Starting application');
 
-connectDB();
+const pool = await connectDB();
+const { rows } = await pool.query('SELECT * FROM genres;');
+log(rows);
