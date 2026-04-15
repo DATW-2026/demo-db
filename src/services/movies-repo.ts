@@ -68,10 +68,7 @@ export class MoviesRepo {
         `;
 
         const { rows } = await this.#pool.query<MovieWithInfo>(q);
-
-        const result = rows.map((movie: Movie) => {
-            this.#obtainGenere(movie);
-        });
+        const result = rows.map(this.#obtainGenere);
 
         return result as Movie[];
     }
