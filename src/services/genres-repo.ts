@@ -3,6 +3,7 @@ import type { Pool } from 'pg';
 
 import { env } from '../config/env.ts';
 import type { Genre } from '../schemas/genre.ts';
+import { SqlError } from '../errors/sql-error.ts';
 
 const log = debug(`${env.PROJECT_NAME}:index`);
 log('Starting application');
@@ -29,7 +30,10 @@ export class GenresRepo {
         const { rows } = await this.#pool.query<Genre>(q, [id]);
 
         if (rows.length === 0) {
-            throw new Error(`Genre with id ${id} not found`);
+            throw new SqlError(`Genre with id ${id} not found`, {
+                code: 'NOT_FOUND',
+                sqlMessage: `No genre found with id ${id}`,
+            });
         }
 
         return rows[0];
