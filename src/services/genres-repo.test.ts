@@ -4,29 +4,21 @@ import assert from 'node:assert/strict';
 import { GenresRepo } from './genres-repo.ts';
 import { connectDB } from '../config/db.ts';
 import type { SqlError } from '../errors/sql-error.ts';
+import {
+    cleanTestingDB,
+    prepareTestingDB,
+} from '../config/prepare-testing-db.ts';
 
 describe('GenresRepo', async () => {
     const pool = await connectDB();
     const genresRepo = new GenresRepo(pool);
 
     beforeEach(async () => {
-        await pool.query(`DROP TABLE IF EXISTS genres`);
-        await pool.query(`
-            CREATE TABLE genres (
-                genre_id SERIAL PRIMARY KEY,
-                name VARCHAR(100) NOT NULL,
-                created_at TIMESTAMP DEFAULT NOW()
-            )
-        `);
-        await pool.query(`
-            INSERT INTO genres (name) VALUES
-                ('Action'),
-                ('Adventure')
-        `);
+        await prepareTestingDB(pool);
     });
 
     afterEach(async () => {
-        await pool.query(`DROP TABLE IF EXISTS genres`);
+        await cleanTestingDB(pool);
     });
 
     describe('Read operations', () => {

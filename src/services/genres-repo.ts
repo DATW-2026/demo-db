@@ -5,7 +5,7 @@ import { env } from '../config/env.ts';
 import type { Genre } from '../schemas/genre.ts';
 import { SqlError } from '../errors/sql-error.ts';
 
-const log = debug(`${env.PROJECT_NAME}:index`);
+const log = debug(`${env.PROJECT_NAME}:genres-repo`);
 log('Starting application');
 
 export class GenresRepo {
