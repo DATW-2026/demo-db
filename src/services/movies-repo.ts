@@ -3,8 +3,6 @@ import type { Pool } from 'pg';
 
 import { env } from '../config/env.ts';
 import type { Movie } from '../schemas/movie.ts';
-import { SqlError } from '../errors/sql-error.ts';
-import { string } from 'zod';
 
 const log = debug(`${env.PROJECT_NAME}:movies-repo`);
 log('Starting application');
@@ -17,7 +15,7 @@ export class MoviesRepo {
         this.#pool = pool;
     }
 
-    #obtainGenere(movie: MovieWithInfo): Movie {
+    #obtainGenre(movie: MovieWithInfo): Movie {
         if (movie.info_genres) {
             movie.genres = movie.info_genres.map((g) => {
                 const [id, name] = g.split('#');
@@ -68,8 +66,35 @@ export class MoviesRepo {
         `;
 
         const { rows } = await this.#pool.query<MovieWithInfo>(q);
-        const result = rows.map(this.#obtainGenere);
+        const result = rows.map(this.#obtainGenre);
 
+        return result as Movie[];
+    }
+
+    async findMoviesWithGenresByTitle(title: string) {
+        const q = `
+        select mo.movie_id AS id, 
+            mo.title,
+            ARRAY_AGG(ge.genre_id || '|' || ge.name) as info_genres,
+            mo.release_year as year, 
+            mo.director, 
+            mo.duration, 
+            mo.poster, 
+            mo.rate
+        from movies mo
+        join movies_genres mg
+        on mo.movie_id = mg.movie_id
+        join genres ge
+        on ge.genre_id = mg.genre_id
+        where mo.title ilike $1
+        group by mo.movie_id
+        order by mo.movie_id
+        `;
+
+        const { rows } = await this.#pool.query<MovieWithInfo>(q, [
+            `%${title}%`,
+        ]);
+        const result = rows.map(this.#obtainGenre);
         return result as Movie[];
     }
 }
