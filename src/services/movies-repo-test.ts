@@ -95,4 +95,10 @@ describe('MoviesRepo', async () => {
             assert.strictEqual(movies.length, 0);
         });
     });
+
+    describe('Create Operations', () => {
+        it('Should create a new movie', async () => {
+            //
+        });
+    });
 });

@@ -35,7 +35,7 @@ export class MoviesRepo {
             SELECT
                 movie_id as id,
                 title,
-                release_year as releaseYear,
+                release_year as year,
                 director,
                 duration,
                 poster,
@@ -54,7 +54,7 @@ export class MoviesRepo {
                     mo.movie_id as id,
                     mo.title,
                     ARRAY_AGG(ge.genre_id || '#' || ge.name) as info_genres,
-                    mo.release_year as releaseYear,
+                    mo.release_year as year,
                     mo.director,
                     mo.duration,
                     mo.poster,
@@ -80,7 +80,7 @@ export class MoviesRepo {
                     mo.movie_id as id,
                     mo.title,
                     ARRAY_AGG(ge.genre_id || '#' || ge.name) as info_genres,
-                    mo.release_year as releaseYear,
+                    mo.release_year as year,
                     mo.director,
                     mo.duration,
                     mo.poster,
@@ -134,5 +134,36 @@ export class MoviesRepo {
         ]);
         const result = rows.map(this.#obtainGenre);
         return result as Movie[];
+    }
+
+    async createMovie(movie: Omit<Movie, 'id'>) {
+        const q = `
+            INSERT INTO movies (title, release_year, director, duration, poster, rate)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING movie_id AS id, title, release_year AS year, director, duration, poster, rate
+        `;
+
+        const { rows } = await this.#pool.query<Movie>(q, [
+            movie.title,
+            movie.year,
+            movie.director,
+            movie.duration,
+            movie.poster,
+            movie.rate,
+        ]);
+
+        const createdMovie = rows[0] as Movie;
+
+        movie.genres?.forEach(async (genre) => {
+            const q2 = `
+                INSERT INTO movies_genres (movie_id, genre_id)
+                VALUES ($1, $2)
+            `;
+
+            await this.#pool.query(q2, [createdMovie.id, genre.id]);
+            createdMovie.genres?.push(genre);
+        });
+
+        return createdMovie;
     }
 }
