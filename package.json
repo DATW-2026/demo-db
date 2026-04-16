@@ -6,7 +6,7 @@
     "scripts": {
         "start": "cross-env NODE_ENV=prod node ./src/index.ts",
         "dev": "node --watch --env-file=.env ./src/index.ts",
-        "setup:testDB": "node --env-file=.env.test ./src/setup.ts",
+        "setup:testDB": "node --env-file=.env.test ./src/setup-db.ts",
         "test:fail": "echo \"Error: no test specified\" && exit 1",
         "test:success": "echo \"Mock Test success\" && exit 0",
         "test": "node --env-file=.env.test --test",
