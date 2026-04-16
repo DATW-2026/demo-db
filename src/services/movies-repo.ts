@@ -153,8 +153,13 @@ export class MoviesRepo {
         ]);
 
         const createdMovie = rows[0] as Movie;
+        createdMovie.rate = Number(createdMovie.rate);
 
-        movie.genres?.forEach(async (genre) => {
+        if (movie.genres) {
+            createdMovie.genres = [];
+        }
+
+        for await (const genre of movie.genres ?? []) {
             const q2 = `
                 INSERT INTO movies_genres (movie_id, genre_id)
                 VALUES ($1, $2)
@@ -162,7 +167,7 @@ export class MoviesRepo {
 
             await this.#pool.query(q2, [createdMovie.id, genre.id]);
             createdMovie.genres?.push(genre);
-        });
+        }
 
         return createdMovie;
     }

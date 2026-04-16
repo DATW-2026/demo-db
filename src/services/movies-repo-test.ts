@@ -97,7 +97,7 @@ describe('MoviesRepo', async () => {
     });
 
     describe('Create Operations', () => {
-        it('Should create a new movie', async () => {
+        it.skip('Should create a new movie', async () => {
             //
         });
     });
