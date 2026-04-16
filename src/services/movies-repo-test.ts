@@ -2,7 +2,10 @@ import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { connectDB } from '../config/db.ts';
-import { prepareTestingDB } from '../config/prepare-testing-db.ts';
+import {
+    cleanTestingDB,
+    prepareTestingDB,
+} from '../config/prepare-testing-db.ts';
 import { MoviesRepo } from './movies-repo.ts';
 
 describe('MoviesRepo', async () => {
@@ -14,7 +17,7 @@ describe('MoviesRepo', async () => {
     });
 
     afterEach(async () => {
-        await pool.query(`DROP TABLE IF EXISTS genres`);
+        await cleanTestingDB(pool);
     });
 
     describe('Read Operations', () => {

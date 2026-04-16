@@ -63,6 +63,7 @@ export class MoviesRepo {
                 JOIN genres ge
                     ON mg.genre_id = ge.genre_id
                 GROUP BY mo.movie_id
+                order by mo.movie_id;
         `;
 
         const { rows } = await this.#pool.query<MovieWithInfo>(q);
@@ -75,7 +76,7 @@ export class MoviesRepo {
         const q = `
         select mo.movie_id AS id, 
             mo.title,
-            ARRAY_AGG(ge.genre_id || '|' || ge.name) as info_genres,
+            ARRAY_AGG(ge.genre_id || '#' || ge.name) as info_genres,
             mo.release_year as year, 
             mo.director, 
             mo.duration, 
