@@ -40,7 +40,8 @@ describe('GenresRepo', async () => {
                 await genresRepo.readGenreById(10);
                 assert.fail('Expected an error to be thrown');
             } catch (error) {
-                assert.strictEqual(error, error as Error);
+                assert.strictEqual((error as SqlError).code, 'NOT_FOUND');
+                assert.strictEqual((error as SqlError).sqlState, 'READ_FAILED');
             }
         });
     });

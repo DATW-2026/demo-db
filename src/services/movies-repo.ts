@@ -3,6 +3,7 @@ import type { Pool } from 'pg';
 
 import { env } from '../config/env.ts';
 import type { Movie } from '../schemas/movie.ts';
+import { SqlError } from '../errors/sql-error.ts';
 
 const log = debug(`${env.PROJECT_NAME}:movies-repo`);
 log('Starting application');
@@ -46,6 +47,7 @@ export class MoviesRepo {
 
         return rows;
     }
+
     async readAllMoviesWithGenres() {
         const q = `
             SELECT
@@ -70,6 +72,41 @@ export class MoviesRepo {
         const result = rows.map(this.#obtainGenre);
 
         return result as Movie[];
+    }
+
+    async readMovieWithGenreById(id: number) {
+        const q = `
+            SELECT
+                    mo.movie_id as id,
+                    mo.title,
+                    ARRAY_AGG(ge.genre_id || '#' || ge.name) as info_genres,
+                    mo.release_year as releaseYear,
+                    mo.director,
+                    mo.duration,
+                    mo.poster,
+                    mo.rate
+                FROM movies mo
+                JOIN movies_genres mg
+                    ON mo.movie_id = mg.movie_id
+                JOIN genres ge
+                    ON mg.genre_id = ge.genre_id
+                    WHERE mo.movie_id = $1
+                GROUP BY mo.movie_id
+        `;
+
+        const { rows } = await this.#pool.query<MovieWithInfo>(q, [id]);
+
+        if (rows.length === 0) {
+            throw new SqlError(`Genre with id ${id} not found`, {
+                code: 'NOT_FOUND',
+                sqlState: 'SELECT_FAILED',
+                sqlMessage: `No movie found with id ${id}`,
+            });
+        }
+
+        const result = rows.map(this.#obtainGenre);
+
+        return result[0] as Movie;
     }
 
     async findMoviesWithGenresByTitle(title: string) {
