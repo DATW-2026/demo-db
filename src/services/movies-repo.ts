@@ -171,4 +171,11 @@ export class MoviesRepo {
 
         return createdMovie;
     }
+
+    async updateMovie(
+        id: number,
+        movie: Partial<Omit<Movie, 'id' | 'genres'>>,
+    ) {
+        //
+    }
 }
