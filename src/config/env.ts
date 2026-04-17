@@ -5,11 +5,14 @@ export const EnvSchema = z.object({
     NODE_ENV: z.enum(['dev', 'prod', 'test']),
     PROJECT_NAME: z.string(),
     DEBUG: z.string().optional(),
+
     PGUSER: z.string(),
     PGPASSWORD: z.string(),
     PGHOST: z.string(),
     PGPORT: z.coerce.number(),
     PGDATABASE: z.string(),
+
+    SQLITE_FILE: z.string(),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
