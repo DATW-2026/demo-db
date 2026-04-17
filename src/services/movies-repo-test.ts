@@ -8,7 +8,8 @@ import {
 } from '../config/prepare-testing-db.ts';
 import { MoviesRepo } from './movies-repo.ts';
 //import { object } from 'zod';
-import type { SqlError } from '../errors/sql-error.ts';
+import { SqlError } from '../errors/sql-error.ts';
+import type { Movie } from '../schemas/movie.ts';
 
 describe('MoviesRepo', async () => {
     const pool = await connectDB();
@@ -97,8 +98,140 @@ describe('MoviesRepo', async () => {
     });
 
     describe('Create Operations', () => {
-        it.skip('Should create a new movie', async () => {
-            //
+        it('should create a new movie', async () => {
+            // Arrange
+            const newMovie: Omit<Movie, 'id'> = {
+                title: 'Inception',
+                year: 2010,
+                director: 'Christopher Nolan',
+                duration: 148,
+                poster: 'https://www.imdb.com/title/tt1375666/',
+                rate: 8.8,
+                genres: [
+                    { id: 1, name: 'Action' },
+                    { id: 2, name: 'Adventure' },
+                ],
+            };
+            // Act
+            const createdMovie = await moviesRepo.createMovie(newMovie);
+            // Assert
+            assert(createdMovie);
+            assert.strictEqual(createdMovie.id, 4); // Assuming it's the next ID in sequence
+            assert.strictEqual(createdMovie.title, newMovie.title);
+            assert.strictEqual(createdMovie.year, newMovie.year);
+            assert.strictEqual(createdMovie.director, newMovie.director);
+            assert.strictEqual(createdMovie.duration, newMovie.duration);
+            assert.strictEqual(createdMovie.poster, newMovie.poster);
+            assert.strictEqual(createdMovie.rate, newMovie.rate);
+            // Test that genres returned in the create operation,
+            assert(Array.isArray(createdMovie.genres));
+            assert.strictEqual(createdMovie.genres?.length, 2);
+            assert.deepEqual(createdMovie.genres, newMovie.genres);
+        });
+    });
+
+    describe('Update operations', () => {
+        it('should update an existing movie', async () => {
+            // Arrange
+            const updatedData: Partial<Omit<Movie, 'id' | 'genres'>> = {
+                // title: 'The Dark Knight Rises',
+                year: 2012, // inicialmente 2008
+                // director: 'Christopher Nolan',
+                // duration: 165,
+                // poster: 'https://www.imdb.com/title/tt1345836/',
+                // rate: 8.4,
+            };
+            // Act
+            const updatedMovie = await moviesRepo.updateMovie(2, updatedData);
+            // Assert
+            assert(updatedMovie);
+            assert.strictEqual(updatedMovie.id, 2);
+            assert.strictEqual(updatedMovie.title, 'The Dark Knight'); // No se actualiza
+            assert.strictEqual(updatedMovie.year, updatedData.year); // Se actualiza
+            assert.strictEqual(updatedMovie.director, 'Christopher Nolan'); // No se actualiza
+            assert.strictEqual(updatedMovie.duration, 152); // No se actualiza
+            assert.strictEqual(
+                updatedMovie.poster,
+                'https://www.imdb.com/title/tt0468569/',
+            ); // No se actualiza
+            assert.strictEqual(updatedMovie.rate, 9.0); // No se actualiza
+        });
+
+        it('should throw an error if movie with id does not exist', async () => {
+            try {
+                await moviesRepo.updateMovie(10, {
+                    title: 'Nonexistent Movie',
+                });
+                assert.fail('Expected error was not thrown');
+            } catch (error) {
+                assert(error instanceof SqlError);
+                assert.strictEqual((error as SqlError).code, 'NOT_FOUND');
+                assert.strictEqual(
+                    (error as SqlError).sqlState,
+                    'UPDATE_FAILED',
+                );
+            }
+        });
+
+        it('should add genre to a movie', async () => {
+            // Act
+            const result = await moviesRepo.toggleMovieGenres(1, 2);
+            // Assert
+            assert(result);
+            assert.strictEqual(result.movie_id, 1);
+            assert.strictEqual(result.genre_id, 2);
+            assert.strictEqual(result.isDeleted, false);
+        });
+
+        it('should remove genre from a movie', async () => {
+            // Act
+            const result = await moviesRepo.toggleMovieGenres(2, 1);
+            // Assert
+            assert(result);
+            assert.strictEqual(result.movie_id, 2);
+            assert.strictEqual(result.genre_id, 1);
+            assert.strictEqual(result.isDeleted, true);
+        });
+    });
+
+    describe('Delete operations', () => {
+        it('should delete an existing movie', async () => {
+            // Act
+            const deletedMovie = await moviesRepo.deleteMovie(3);
+            // Assert
+            assert(deletedMovie);
+            assert.strictEqual(deletedMovie.id, 3);
+            assert.strictEqual(
+                deletedMovie.title,
+                'The Lord of the Rings: The Fellowship of the Ring',
+            );
+            // Verify that the movie is actually deleted
+            try {
+                await moviesRepo.readMovieWithGenreById(3);
+                assert.fail('Expected error was not thrown');
+            } catch (error) {
+                assert(error instanceof SqlError);
+                assert.strictEqual(error.message, 'Genre with id 3 not found');
+                assert.strictEqual((error as SqlError).code, 'NOT_FOUND');
+                assert.strictEqual(
+                    (error as SqlError).sqlState,
+                    'SELECT_FAILED',
+                );
+            }
+        });
+
+        it('should throw an error if movie with id does not exist', async () => {
+            try {
+                await moviesRepo.deleteMovie(10);
+                assert.fail('Expected error was not thrown');
+            } catch (error) {
+                assert(error instanceof SqlError);
+                assert.strictEqual((error as SqlError).code, 'NOT_FOUND');
+                assert.strictEqual(
+                    (error as SqlError).sqlState,
+                    'DELETE_FAILED',
+                );
+            }
         });
     });
 });
